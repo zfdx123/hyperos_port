@@ -936,12 +936,7 @@ fi
 # 去除avb校验
 blue "去除avb校验" "Disable avb verification."
 for fstab in $(find build/portrom/images/ -type f -name "fstab.*");do
-    blue "Target: $fstab"
-    sed -i "s/,avb_keys=.*avbpubkey//g" $fstab
-    sed -i "s/,avb=vbmeta_system//g" $fstab
-    sed -i "s/,avb=vbmeta_vendor//g" $fstab
-    sed -i "s/,avb=vbmeta//g" $fstab
-    sed -i "s/,avb//g" $fstab
+    disable_avb_verify $fstab
 done
 
 # data 加密
