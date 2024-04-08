@@ -71,6 +71,26 @@ jobs:
               sed -i "s/remove_data_encryption=false/remove_data_encryption=true/" bin/port_config
           fi
           sudo bash "$GITHUB_WORKSPACE"/port.sh ${{ github.event.inputs.STOCK_URL }} ${{ github.event.inputs.PORT_URL }} 
-      - name: 6.上传到OneDrive | PUSH ROM TO ONEDRIVE
+      - name: 6. 准备上传 | PREPARE UPLOADING
         run: |
-            rclone sync -P "$GITHUB_WORKSPACE"/out/*.zip onedrive:/ROM/github-actions
+          ROM_NAME=$(basename $(find "$GITHUB_WORKSPACE"/out -name "*.zip"))
+          OS_VERSION=$(echo $ROM_NAME | cut -d "_" -f3)
+          mkdir -p "$GITHUB_WORKSPACE"/GithubRelease
+          cd "$GITHUB_WORKSPACE"/GithubRelease
+          sudo split -b 1536M -d "$GITHUB_WORKSPACE"/out/$ROM_NAME" "$ROM_NAME"
+      - name: 7.上传到OneDrive | PUSH ROM TO ONEDRIVE
+        run: |
+            rclone sync -P "$GITHUB_WORKSPACE"/out/"$ROM_NAME" onedrive:/ROM/github-actions
+            SHARE_LINK=$(rclone link onedrive:/ROM/github-actions/"$ROM_NAME" --onedrive-link-scope anonymous)
+            touch file.log
+            echo "Onedrive下载链接 | Onedrive download link for $ROM_NAME: \n$SHARE_LINK" > file.log
+     
+      - name: 8. 上传到Github Release| UPLOAD ROM TO GITHUB RELEASAE
+        uses: ncipollo/release-action@main
+        with:
+          artifacts: ${{ github.workspace }}/GithubRelease/*
+          name: $ROM_NAME
+          tag: $OS_VERSION
+          bodyFile: "${{ github.workspace }}/file.log"
+          allowUpdates: true
+          artifactErrorsFailBuild: true
