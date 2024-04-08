@@ -84,15 +84,15 @@ jobs:
       - name: 7.上传到OneDrive | PUSH ROM TO ONEDRIVE
         run: |
             rclone sync -P "$GITHUB_WORKSPACE"/out/${{ env.ROM_FILE }} onedrive:/ROM/github-actions
-            SHARE_LINK=$(rclone link onedrive:/ROM/github-actions/${{ env.ROM_FILE }} --onedrive-link-scope anonymous)
+            SHARE_LINK=$(rclone link onedrive:/ROM/github-actions/ --onedrive-link-scope anonymous)
             touch file.log
-            echo "Onedrive下载链接 | Onedrive download link for ${{ env.ROM_FILE }}: \n$SHARE_LINK" > file.log
+            echo -e "Onedrive下载链接 | Onedrive alternate download link: \n $SHARE_LINK" > file.log
      
       - name: 8. 上传到Github Release| UPLOAD ROM TO GITHUB RELEASAE
         uses: ncipollo/release-action@main
         with:
           artifacts: ${{ github.workspace }}/GithubRelease/*
-          name: ${{ env.ROM_FILE }}
+          name: ${{ env.OS_VERSION }}
           tag: ${{ env.OS_VERSION }}
           bodyFile: "${{ github.workspace }}/file.log"
           allowUpdates: true
