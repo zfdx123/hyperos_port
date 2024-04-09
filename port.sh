@@ -194,7 +194,7 @@ elif [[ ${is_base_rom_eu} == true ]];then
 elif [[ ${baserom_type} == 'br' ]];then
     blue "开始分解底包 [new.dat.br]" "Unpacking BASEROM[new.dat.br]"
         for i in ${super_list}; do 
-            ${tools_dir}/brotli -d build/baserom/$i.new.dat.br >/dev/null 2>&1
+            ${tools_dir}/brotli -d build/baserom/$i.new.dat.br
             sudo python3 ${work_dir}/bin/sdat2img.py build/baserom/$i.transfer.list build/baserom/$i.new.dat build/baserom/images/$i.img >/dev/null 2>&1
             rm -rf build/baserom/$i.new.dat* build/baserom/$i.transfer.list build/baserom/$i.patch.*
         done
@@ -204,13 +204,13 @@ for part in system system_dlkm system_ext product product_dlkm mi_ext ;do
     if [[ -f build/baserom/images/${part}.img ]];then 
         if [[ $(python3 $work_dir/bin/gettype.py build/baserom/images/${part}.img) == "ext" ]];then
             blue "正在分解底包 ${part}.img [ext]" "Extracing ${part}.img [ext] from BASEROM"
-            sudo python3 bin/imgextractor/imgextractor.py build/baserom/images/${part}.img build/baserom/images/ >/dev/null 2>&1
+            sudo python3 bin/imgextractor/imgextractor.py build/baserom/images/${part}.img build/baserom/images/
             blue "分解底包 [${part}.img] 完成" "BASEROM ${part}.img [ext] extracted."
             rm -rf build/baserom/images/${part}.img      
         elif [[ $(python3 $work_dir/bin/gettype.py build/baserom/images/${part}.img) == "erofs" ]]; then
             pack_type=EROFS
             blue "正在分解底包 ${part}.img [erofs]" "Extracing ${part}.img [erofs] from BASEROM"
-            extract.erofs -x -i build/baserom/images/${part}.img  -o build/baserom/images/ > /dev/null 2>&1 || error "分解 ${part}.img 失败" "Extracting ${part}.img failed."
+            extract.erofs -x -i build/baserom/images/${part}.img  -o build/baserom/images/ || error "分解 ${part}.img 失败" "Extracting ${part}.img failed."
             blue "分解底包 [${part}.img][erofs] 完成" "BASEROM ${part}.img [erofs] extracted."
             rm -rf build/baserom/images/${part}.img
         fi
@@ -246,7 +246,7 @@ for part in ${super_list};do
         
         if [[ $(python3 $work_dir/bin/gettype.py build/portrom/images/${part}.img) == "ext" ]];then
             pack_type=EXT
-            python3 bin/imgextractor/imgextractor.py build/portrom/images/${part}.img build/portrom/images/ > /dev/null 2>&1 || error "提取${part}失败" "Extracting partition ${part} failed"
+            python3 bin/imgextractor/imgextractor.py build/portrom/images/${part}.img build/portrom/images/ || error "提取${part}失败" "Extracting partition ${part} failed"
             mkdir -p build/portrom/images/${part}/lost+found
             rm -rf build/portrom/images/${part}.img
             green "提取 [${part}] [ext]镜像完毕" "Extracting [${part}].img [ext] done"
@@ -254,7 +254,7 @@ for part in ${super_list};do
             pack_type=EROFS
             green "移植包为 [erofs] 文件系统" "PORTROM filesystem: [erofs]. "
             [ "${repackext4}" = "true" ] && pack_type=EXT
-            extract.erofs -x -i build/portrom/images/${part}.img -o build/portrom/images/ > /dev/null 2>&1 || error "提取${part}失败" "Extracting ${part} failed"
+            extract.erofs -x -i build/portrom/images/${part}.img -o build/portrom/images/ || error "提取${part}失败" "Extracting ${part} failed"
             mkdir -p build/portrom/images/${part}/lost+found
             rm -rf build/portrom/images/${part}.img
             green "提取移植包[${part}] [erofs]镜像完毕" "Extracting ${part} [erofs] done."
@@ -441,13 +441,13 @@ if [[ -f $targetDevicesAndroidOverlay ]]; then
     filename=$(basename $targetDevicesAndroidOverlay)
     yellow "修复息屏和屏下指纹问题" "Fixing AOD issue: $filename ..."
     targetDir=$(echo "$filename" | sed 's/\..*$//')
-    bin/apktool/apktool d $targetDevicesAndroidOverlay -o tmp/$targetDir -f > /dev/null 2>&1
+    bin/apktool/apktool d $targetDevicesAndroidOverlay -o tmp/$targetDir -f
     search_pattern="com\.miui\.aod\/com\.miui\.aod\.doze\.DozeService"
     replacement_pattern="com\.android\.systemui\/com\.android\.systemui\.doze\.DozeService"
     for xml in $(find tmp/$targetDir -type f -name "*.xml");do
         sed -i "s/$search_pattern/$replacement_pattern/g" $xml
     done
-    bin/apktool/apktool b tmp/$targetDir -o tmp/$filename > /dev/null 2>&1 || error "apktool 打包失败" "apktool mod failed"
+    bin/apktool/apktool b tmp/$targetDir -o tmp/$filename  || error "apktool 打包失败" "apktool mod failed"
     cp -rf tmp/$filename $targetDevicesAndroidOverlay
     rm -rf tmp
 fi
@@ -463,13 +463,13 @@ if [[ -f $targetAospFrameworkResOverlay ]]; then
     filename=$(basename $targetAospFrameworkResOverlay)
     yellow "Change defaultPeakRefreshRate: $filename ..."
     targetDir=$(echo "$filename" | sed 's/\..*$//')
-    bin/apktool/apktool d $targetAospFrameworkResOverlay -o tmp/$targetDir -f > /dev/null 2>&1
+    bin/apktool/apktool d $targetAospFrameworkResOverlay -o tmp/$targetDir -f
 
     for xml in $(find tmp/$targetDir -type f -name "integers.xml");do
         # magic: Change DefaultPeakRefrshRate to 60 
         xmlstarlet ed -L -u "//integer[@name='config_defaultPeakRefreshRate']/text()" -v 60 $xml
     done
-    bin/apktool/apktool b tmp/$targetDir -o tmp/$filename > /dev/null 2>&1 || error "apktool 打包失败" "apktool mod failed"
+    bin/apktool/apktool b tmp/$targetDir -o tmp/$filename || error "apktool 打包失败" "apktool mod failed"
     cp -rf tmp/$filename $targetAospFrameworkResOverlay
 fi
 
@@ -825,12 +825,12 @@ if [[ ${port_rom_code} == "dagu_cn" ]];then
         filename=$(basename $targetAospFrameworkTelephonyResOverlay)
         yellow "Enable Phone Call and SMS feature in Pad port."
         targetDir=$(echo "$filename" | sed 's/\..*$//')
-        bin/apktool/apktool d $targetAospFrameworkTelephonyResOverlay -o tmp/$targetDir -f > /dev/null 2>&1
+        bin/apktool/apktool d $targetAospFrameworkTelephonyResOverlay -o tmp/$targetDir -f
         for xml in $(find tmp/$targetDir -type f -name "*.xml");do
             sed -i 's|<bool name="config_sms_capable">false</bool>|<bool name="config_sms_capable">true</bool>|' $xml
             sed -i 's|<bool name="config_voice_capable">false</bool>|<bool name="config_voice_capable">true</bool>|' $xml
         done
-        bin/apktool/apktool b tmp/$targetDir -o tmp/$filename > /dev/null 2>&1 || error "apktool 打包失败" "apktool mod failed"
+        bin/apktool/apktool b tmp/$targetDir -o tmp/$filename || error "apktool 打包失败" "apktool mod failed"
         cp -rf tmp/$filename $targetAospFrameworkTelephonyResOverlay
         #rm -rf tmp
     fi
@@ -1116,7 +1116,7 @@ if [[ "$is_ab_device" == false ]];then
 
     #disable vbmeta
     for img in $(find out/${os_type}_${device_code}_${port_rom_version}/firmware-update -type f -name "vbmeta*.img");do
-        python3 bin/patch-vbmeta.py ${img} > /dev/null 2>&1
+        python3 bin/patch-vbmeta.py ${img}
     done
     cp -rf bin/flash/a-only/update-binary out/${os_type}_${device_code}_${port_rom_version}/META-INF/com/google/android/
     cp -rf bin/flash/zstd out/${os_type}_${device_code}_${port_rom_version}/META-INF/
@@ -1184,10 +1184,10 @@ else
 fi
 
 find out/${os_type}_${device_code}_${port_rom_version} |xargs touch
-pushd out/${os_type}_${device_code}_${port_rom_version}/ >/dev/null || exit
+pushd out/${os_type}_${device_code}_${port_rom_version}/  || exit
 zip -r ${os_type}_${device_code}_${port_rom_version}.zip ./*
 mv ${os_type}_${device_code}_${port_rom_version}.zip ../
-popd >/dev/null || exit
+popd || exit
 pack_timestamp=$(date +"%m%d%H%M")
 hash=$(md5sum out/${os_type}_${device_code}_${port_rom_version}.zip |head -c 10)
 if [[ $pack_type == "EROFS" ]];then
