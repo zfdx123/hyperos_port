@@ -100,6 +100,8 @@ elif unzip -l ${baserom} | grep -q "br$";then
     super_list="vendor mi_ext odm system product system_ext"
 elif unzip -l ${baserom} | grep -q "images/super.img*"; then
     is_base_rom_eu=true
+    alias smali.jar=smali-3.0.5.jar
+    alias baksmali.jar=baksmali-3.0.5.jar
     super_list="vendor mi_ext odm system product system_ext"
 else
     error "底包中未发现payload.bin以及br文件，请使用MIUI官方包后重试" "payload.bin/new.br not found, please use HyperOS official OTA zip package."
