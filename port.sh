@@ -777,6 +777,13 @@ fi
 unlock_device_feature "default rhythmic eyecare mode" "integer" "default_eyecare_mode" "2"
 unlock_device_feature "default texture for paper eyecare" "integer" "paper_eyecare_default_texture" "0"
 
+
+if [[ ${port_rom_code} == "munch_cn" ]];then
+    # Add missing camera permission android.permission.TURN_SCREEN_ON
+    # this missing permission will cause device stuck on boot with higher custom Camera(eg: 5.2.0.XX) integrated
+    sed -i 's|<permission name="android.permission.SYSTEM_CAMERA" />|<permission name="android.permission.SYSTEM_CAMERA" />\n\t\t<permission name="android.permission.TURN_SCREEN_ON" />|' build/portrom/images/product/etc/permissions/privapp-permissions-product.xml
+
+fi
 #自定义替换
 
 if [[ ${port_rom_code} == "dagu_cn" ]];then
