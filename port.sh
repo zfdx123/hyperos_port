@@ -782,10 +782,14 @@ if [[ ${port_rom_code} == "munch_cn" ]];then
     # Add missing camera permission android.permission.TURN_SCREEN_ON
     # this missing permission will cause device stuck on boot with higher custom Camera(eg: 5.2.0.XX) integrated
     sed -i 's|<permission name="android.permission.SYSTEM_CAMERA" />|<permission name="android.permission.SYSTEM_CAMERA" />\n\t\t<permission name="android.permission.TURN_SCREEN_ON" />|' build/portrom/images/product/etc/permissions/privapp-permissions-product.xml
+else
+    # FboNativeService  
+    fbo_native_service_bin=$(find build/baserom/images/system/ -name "FboNativeService")
+    fbo_native_service_rc=$(find build/baserom/images/system/ -name "memory.fbo.native@1.0-service.rc")
+    cp -rf $fbo_native_service_bin build/portrom/images/system/system/bin/
+    cp -rf $fbo_native_service_rc build/portrom/images/system/system/etc/init/
 
 fi
-#自定义替换
-
 if [[ ${port_rom_code} == "dagu_cn" ]];then
     echo "ro.control_privapp_permissions=log" >> build/portrom/images/product/etc/build.prop
     
