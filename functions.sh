@@ -92,6 +92,13 @@ check() {
 # $3: Value to be replaced
 # $4: Replacement value
 patch_smali() {
+    if [[ $is_eu_rom == "true" ]]; then
+       SMALI_COMMAND="java -jar bin/apktool/smali-3.0.5.jar"
+       BAKSMALI_COMMAND="java -jar bin/apktool/baksmali-3.0.5.jar" 
+    else
+       SMALI_COMMAND="java -jar bin/apktool/smali.jar"
+       BAKSMALI_COMMAND="java -jar bin/apktool/baksmali.jar"
+    fi
     targetfilefullpath=$(find build/portrom/images -type f -name $1)
     if [ -f $targetfilefullpath ];then
         targetfilename=$(basename $targetfilefullpath)
@@ -104,7 +111,7 @@ patch_smali() {
         for dexfile in tmp/$foldername/*.dex;do
             smalifname=${dexfile%.*}
             smalifname=$(echo $smalifname | cut -d "/" -f 3)
-            java -jar bin/apktool/baksmali.jar d --api ${port_android_sdk} ${dexfile} -o tmp/$foldername/$smalifname 2>&1 || error " Baksmaling 失败" "Baksmaling failed"
+            ${BAKSMALI_COMMAND} d --api ${port_android_sdk} ${dexfile} -o tmp/$foldername/$smalifname 2>&1 || error " Baksmaling 失败" "Baksmaling failed"
         done
         if [[ $2 == *"/"* ]];then
             targetsmali=$(find tmp/$foldername/*/$(dirname $2) -type f -name $(basename $2))
@@ -121,7 +128,7 @@ patch_smali() {
             else
             sed -i "s/$search_pattern/$repalcement_pattern/g" $targetsmali
             fi
-            java -jar bin/apktool/smali.jar a --api ${port_android_sdk} tmp/$foldername/${smalidir} -o tmp/$foldername/${smalidir}.dex > /dev/null 2>&1 || error " Smaling 失败" "Smaling failed"
+            ${SMALI_COMMAND} a --api ${port_android_sdk} tmp/$foldername/${smalidir} -o tmp/$foldername/${smalidir}.dex > /dev/null 2>&1 || error " Smaling 失败" "Smaling failed"
             pushd tmp/$foldername/ >/dev/null || exit
             7z a -y -mx0 -tzip $targetfilename ${smalidir}.dex  > /dev/null 2>&1 || error "修改$targetfilename失败" "Failed to modify $targetfilename"
             popd >/dev/null || exit
