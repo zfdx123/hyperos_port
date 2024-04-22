@@ -883,12 +883,12 @@ if [[ -d "devices/common" ]];then
     targetMiLinkCirculateMIUI15=$(find build/portrom/images/product -type d -name "MiLinkCirculate*")
     targetNQNfcNci=$(find build/portrom/images/system/system build/portrom/images/product build/portrom/images/system_ext -type d -name "NQNfcNci*")
 
-    if [[ $base_android_version == "13" ]];then
+    if [[ $base_android_version == "13" ]] && [[ $port_android_version == "14" ]];then
         rm -rf $targetNQNfcNci
-        cp -rf devices/common/overlay/system/* build/portrom/images/system/
-        cp -rf devices/common/overlay/system_ext/framework/* build/portrom/images/system_ext/framework/
-
+        unzip -oq devices/common/nfc_a14.zip -d build/portrom/images/
+        echo "ro.vendor.nfc.dispatch_optim=1" >> build/portrom/images/vendor/build.prop
     fi
+    
     if [[ $base_android_version == "13" ]] && [[ -f $commonCamera ]];then
         yellow "替换相机为10S HyperOS A13 相机，MI10可用, thanks to 酷安 @PedroZ" "Replacing a compatible MiuiCamera.apk verson 4.5.003000.2"
         if [[ -d $targetCamera ]];then
