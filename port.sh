@@ -782,17 +782,11 @@ if [[ ${port_rom_code} == "munch_cn" ]];then
     # Add missing camera permission android.permission.TURN_SCREEN_ON
     # this missing permission will cause device stuck on boot with higher custom Camera(eg: 5.2.0.XX) integrated
     sed -i 's|<permission name="android.permission.SYSTEM_CAMERA" />|<permission name="android.permission.SYSTEM_CAMERA" />\n\t\t<permission name="android.permission.TURN_SCREEN_ON" />|' build/portrom/images/product/etc/permissions/privapp-permissions-product.xml
-else
-    # FboNativeService  
-    fbo_native_service_bin=$(find build/baserom/images/system/ -name "FboNativeService")
-    fbo_native_service_rc=$(find build/baserom/images/system/ -name "memory.fbo.native@1.0-service.rc")
-    cp -rf $fbo_native_service_bin build/portrom/images/system/system/bin/
-    cp -rf $fbo_native_service_rc build/portrom/images/system/system/etc/init/
 
 fi
 
 #Add perfect icons
-Blue "Integrating perfect icons"  
+blue "Integrating perfect icons"  
 git clone --depth=1 https://github.com/pzcn/Perfect-Icons-Completion-Project.git icons &>/dev/null
 for pkg in "$work_dir"/build/portrom/images/product/media/theme/miui_mod_icons/dynamic/*; do
   if [[ -d "$work_dir"/icons/icons/$pkg ]]; then
