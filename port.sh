@@ -815,6 +815,11 @@ mv "$work_dir"/build/portrom/images/product/media/theme/default/dynamicicons.zip
 rm -rf "$work_dir"/icons
 cd "$work_dir"
 
+# Optimize prop from K40s 
+if ! is_property_exists ro.miui.surfaceflinger_affinity build/portrom/images/product/etc/build.prop; then
+    echo "ro.miui.surfaceflinger_affinity=true" >> build/portrom/images/product/etc/build.prop
+fi
+
 #自定义替换
 if [[ ${port_rom_code} == "dagu_cn" ]];then
     echo "ro.control_privapp_permissions=log" >> build/portrom/images/product/etc/build.prop
