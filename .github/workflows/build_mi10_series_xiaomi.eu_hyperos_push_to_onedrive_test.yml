@@ -1,4 +1,4 @@
-name: build_mi10_series_hyperos_OneDrivePush
+name: build_mi10_series_eu_hyperos_OneDrivePush
 on:
   workflow_dispatch:
     inputs:
@@ -41,7 +41,7 @@ jobs:
       - name: 3. 检出仓库文件 | CHECKOUT REPOSITORY
         uses: actions/checkout@main
         with:
-          ref: dev
+          ref: test
           fetch-depth: 1
       - name: 4. 准备环境 | PREPARE ENVIRONMENT
         run: |
