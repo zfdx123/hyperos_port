@@ -94,10 +94,8 @@ if unzip -l ${baserom} | grep -q "payload.bin"; then
     super_list="vendor mi_ext odm odm_dlkm system system_dlkm vendor_dlkm product product_dlkm system_ext"
 elif unzip -l ${baserom} | grep -q "br$";then
     baserom_type="br"
-    super_list="vendor mi_ext odm system product system_ext"
 elif unzip -l ${baserom} | grep -q "images/super.img*"; then
     is_base_rom_eu=true
-    super_list="vendor mi_ext odm system product system_ext"
 else
     error "底包中未发现payload.bin以及br文件，请使用MIUI官方包后重试" "payload.bin/new.br not found, please use HyperOS official OTA zip package."
     exit
@@ -184,11 +182,13 @@ if [[ ${baserom_type} == 'payload' ]];then
 
 elif [[ ${is_base_rom_eu} == true ]];then
      blue "开始分解底包 [super.img]" "Unpacking BASEROM [super.img]"
+     super_list=$(python3 bin/lpunpack.py --info build/baserom/images/super.img | grep "super:" | awk '{ print $5 }')
         for i in ${super_list}; do 
             python3 bin/lpunpack.py -p ${i} build/baserom/super.img build/baserom/images
         done
 
 elif [[ ${baserom_type} == 'br' ]];then
+    super_list=$(cat build/baserom/dynamic_partitions_op_list | grep "add " | awk '{ print $2 }')
     blue "开始分解底包 [new.dat.br]" "Unpacking BASEROM[new.dat.br]"
         for i in ${super_list}; do 
             ${tools_dir}/brotli -d build/baserom/$i.new.dat.br
@@ -220,6 +220,10 @@ for image in vendor odm vendor_dlkm odm_dlkm;do
         cp -rf build/baserom/images/${image}.img build/portrom/images/${image}.img
     fi
 done
+
+# Extract the partitions list that need to pack into the super.img
+super_list=$(sed '/^#/d;/^\//d;/overlay/d;/^$/d' build/portrom/images/vendor/etc/fstab.qcom \
+                | awk '{ print $1}' | sort | uniq)
 
 # 分解镜像
 green "开始提取逻辑分区镜像" "Starting extract partition from img"
