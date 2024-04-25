@@ -44,8 +44,6 @@ port_partition=$(grep "partition_to_port" bin/port_config |cut -d '=' -f 2)
 #super_list=$(grep "super_list" bin/port_config |cut -d '=' -f 2)
 repackext4=$(grep "repack_with_ext4" bin/port_config |cut -d '=' -f 2)
 
-compatible_matrix_matches_enabled=$(grep "compatible_matrix_matches_check" bin/port_config | cut -d '=' -f 2)
-
 if [[ ${repackext4} == true ]]; then
     pack_type=EXT
 else
@@ -517,9 +515,6 @@ if [[ ${is_eu_rom} == "true" ]];then
     patch_smali "miui-services.jar" "SystemServerImpl.smali" ".method public constructor <init>()V/,/.end method" ".method public constructor <init>()V\n\t.registers 1\n\tinvoke-direct {p0}, Lcom\/android\/server\/SystemServerStub;-><init>()V\n\n\treturn-void\n.end method" "regex"
 
 else    
-    if [[ "$compatible_matrix_matches_enabled" == "false" ]]; then
-        patch_smali "framework.jar" "Build.smali" ".method public static isBuildConsistent()Z" ".method public static isBuildConsistent()Z \n\n\t.registers 1 \n\n\tconst\/4 v0,0x1\n\n\treturn v0\n.end method\n\n.method public static isBuildConsistent_bak()Z"
-    fi
     if [[ ! -d tmp ]];then
         mkdir -p tmp/
     fi
