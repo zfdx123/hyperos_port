@@ -182,7 +182,7 @@ if [[ ${baserom_type} == 'payload' ]];then
 
 elif [[ ${is_base_rom_eu} == true ]];then
      blue "开始分解底包 [super.img]" "Unpacking BASEROM [super.img]"
-     super_list=$(python3 bin/lpunpack.py --info build/baserom/super.img | grep "super:" | awk '{ print $5 }')
+     super_list=$(python3 bin/lpunpack.py --info build/baserom/super.img | grep "super:" | awk '{ print $5 }' | sed 's/_a//g')
         for i in ${super_list}; do 
             python3 bin/lpunpack.py -p ${i} build/baserom/super.img build/baserom/images
         done
