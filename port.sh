@@ -198,26 +198,17 @@ elif [[ ${baserom_type} == 'br' ]];then
 fi
 
 for part in system system_dlkm system_ext product product_dlkm mi_ext ;do
-    if [[ -f build/baserom/images/${part}.img ]];then 
-        if [[ $(python3 $work_dir/bin/gettype.py build/baserom/images/${part}.img) == "ext" ]];then
-            blue "正在分解底包 ${part}.img [ext]" "Extracing ${part}.img [ext] from BASEROM"
-            sudo python3 bin/imgextractor/imgextractor.py build/baserom/images/${part}.img build/baserom/images/
-            blue "分解底包 [${part}.img] 完成" "BASEROM ${part}.img [ext] extracted."
-            rm -rf build/baserom/images/${part}.img      
-        elif [[ $(python3 $work_dir/bin/gettype.py build/baserom/images/${part}.img) == "erofs" ]]; then
-            pack_type=EROFS
-            blue "正在分解底包 ${part}.img [erofs]" "Extracing ${part}.img [erofs] from BASEROM"
-            extract.erofs -x -i build/baserom/images/${part}.img  -o build/baserom/images/ || error "分解 ${part}.img 失败" "Extracting ${part}.img failed."
-            blue "分解底包 [${part}.img][erofs] 完成" "BASEROM ${part}.img [erofs] extracted."
-            rm -rf build/baserom/images/${part}.img
-        fi
-    fi
-    
+    extract_partition build/baserom/images/${part}.img build/baserom/images    
 done
 
+# Move those to portrom folder. We need to pack those imgs into final port rom
 for image in vendor odm vendor_dlkm odm_dlkm;do
     if [ -f build/baserom/images/${image}.img ];then
         cp -rf build/baserom/images/${image}.img build/portrom/images/${image}.img
+
+        # Extracting vendor at first, we need to determine which super parts to pack from Baserom fstab. 
+        extract_partition build/portrom/images/${image}.img build/portrom/images/
+
     fi
 done
 
@@ -226,41 +217,26 @@ super_list=$(sed '/^#/d;/^\//d;/overlay/d;/^$/d' build/portrom/images/vendor/etc
                 | awk '{ print $1}' | sort | uniq)
 
 # 分解镜像
-green "开始提取逻辑分区镜像" "Starting extract partition from img"
+green "开始提取逻辑分区镜像" "Starting extract portrom partition from img"
+
+if [[ ${is_eu_rom} == true ]];then
+    for part in ${super_list};do
+        blue "PORTROM super.img 提取 [${part}] 分区..." "Extracting [${part}] from PORTROM super.img"
+        blue "lpunpack.py PORTROM super.img ${patrt}_a"
+        python3 bin/lpunpack.py -p ${part}_a build/portrom/super.img build/portrom/images 
+        mv build/portrom/images/${part}_a.img build/portrom/images/${part}.img
+    done
+fi
+
 echo $super_list
 for part in ${super_list};do
-    if [[ $part =~ ^(vendor|odm|vendor_dlkm|odm_dlkm)$ ]] && [[ -f "build/portrom/images/$part.img" ]]; then
-        blue "从底包中提取 [${part}]分区 ..." "Extracting [${part}] from BASEROM"
-    else
-        if [[ ${is_eu_rom} == true ]];then
-            blue "PORTROM super.img 提取 [${part}] 分区..." "Extracting [${part}] from PORTROM super.img"
-            blue "lpunpack.py PORTROM super.img ${patrt}_a"
-            python3 bin/lpunpack.py -p ${part}_a build/portrom/super.img build/portrom/images 
-            mv build/portrom/images/${part}_a.img build/portrom/images/${part}.img
-        else
-            blue "payload.bin 提取 [${part}] 分区..." "Extracting [${part}] from PORTROM payload.bin"
-            payload-dumper-go -p ${part} -o build/portrom/images/ build/portrom/payload.bin >/dev/null 2>&1 ||error "提取移植包 [${part}] 分区时出错" "Extracting partition [${part}] error."
-        fi
-    fi
-    if [ -f "${work_dir}/build/portrom/images/${part}.img" ];then
-        blue "开始提取 ${part}.img" "Extracting ${part}.img"
-        
-        if [[ $(python3 $work_dir/bin/gettype.py build/portrom/images/${part}.img) == "ext" ]];then
-            pack_type=EXT
-            python3 bin/imgextractor/imgextractor.py build/portrom/images/${part}.img build/portrom/images/ || error "提取${part}失败" "Extracting partition ${part} failed"
-            mkdir -p build/portrom/images/${part}/lost+found
-            rm -rf build/portrom/images/${part}.img
-            green "提取 [${part}] [ext]镜像完毕" "Extracting [${part}].img [ext] done"
-        elif [[ $(python3 $work_dir/bin/gettype.py build/portrom/images/${part}.img) == "erofs" ]];then
-            pack_type=EROFS
-            green "移植包为 [erofs] 文件系统" "PORTROM filesystem: [erofs]. "
-            [ "${repackext4}" = "true" ] && pack_type=EXT
-            extract.erofs -x -i build/portrom/images/${part}.img -o build/portrom/images/ || error "提取${part}失败" "Extracting ${part} failed"
-            mkdir -p build/portrom/images/${part}/lost+found
-            rm -rf build/portrom/images/${part}.img
-            green "提取移植包[${part}] [erofs]镜像完毕" "Extracting ${part} [erofs] done."
-        fi
-        
+    # Skip extraced parts from BASEROM
+    if [[ ! -d build/portrom/images/${part} ]]; then
+        blue "payload.bin 提取 [${part}] 分区..." "Extracting [${part}] from PORTROM payload.bin"
+
+        payload-dumper-go -p ${part} -o build/portrom/images/ build/portrom/payload.bin >/dev/null 2>&1 ||error "提取移植包 [${part}] 分区时出错" "Extracting partition [${part}] error."
+      
+        extract_partition "${work_dir}/build/portrom/images/${part}.img" "${work_dir}/build/portrom/images/"
     fi
 done
 rm -rf config

@@ -209,3 +209,23 @@ disable_avb_verify() {
         sed -i "s/,avb//g" $fstab
     fi
 }
+
+extract_partition() {
+    part_img=$1
+    part_name=$(basename ${part_img})
+    target_dir=$2
+    if [[ -f ${part_img} ]];then 
+        if [[ $($tools_dir/gettype -i ${part_img} ) == "ext" ]];then
+            blue "[ext] 正在分解${part_name}" "[ext] Extracing ${part_name} "
+            sudo python3 bin/imgextractor/imgextractor.py ${part_img} ${target_dir} >/dev/null 2>&1
+            green "[ext]分解[${part_name}] 完成" "[ext] ${part_name} extracted."
+            rm -rf ${part_img}      
+        elif [[ $($tools_dir/gettype -i ${part_img}) == "erofs" ]]; then
+            pack_type=EROFS
+            blue "[erofs] 正在分解${part_name} " "[erofs] Extracing ${part_name} "
+            extract.erofs -x -i ${part_img}  -o $target_dir > /dev/null 2>&1 || error "分解 ${part_name} 失败" "Extracting ${part_name} failed."
+            green "[erofs] 分解[${part_name}] 完成" "[erofs] ${part_name} extracted."
+            rm -rf ${part_img}
+        fi
+    fi    
+}
