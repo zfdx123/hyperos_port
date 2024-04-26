@@ -218,25 +218,22 @@ super_list=$(sed '/^#/d;/^\//d;/overlay/d;/^$/d' build/portrom/images/vendor/etc
 
 # 分解镜像
 green "开始提取逻辑分区镜像" "Starting extract portrom partition from img"
-
-if [[ ${is_eu_rom} == true ]];then
-    for part in ${super_list};do
-        blue "PORTROM super.img 提取 [${part}] 分区..." "Extracting [${part}] from PORTROM super.img"
-        blue "lpunpack.py PORTROM super.img ${patrt}_a"
-        python3 bin/lpunpack.py -p ${part}_a build/portrom/super.img build/portrom/images 
-        mv build/portrom/images/${part}_a.img build/portrom/images/${part}.img
-    done
-fi
-
-echo $super_list
 for part in ${super_list};do
-    # Skip extraced parts from BASEROM
+# Skip already extraced parts from BASEROM
     if [[ ! -d build/portrom/images/${part} ]]; then
-        blue "payload.bin 提取 [${part}] 分区..." "Extracting [${part}] from PORTROM payload.bin"
+        if [[ ${is_eu_rom} == true ]];then
+            blue "PORTROM super.img 提取 [${part}] 分区..." "Extracting [${part}] from PORTROM super.img"
+            blue "lpunpack.py PORTROM super.img ${patrt}_a"
+            python3 bin/lpunpack.py -p ${part}_a build/portrom/super.img build/portrom/images 
+            mv build/portrom/images/${part}_a.img build/portrom/images/${part}.img
+        else
+            blue "payload.bin 提取 [${part}] 分区..." "Extracting [${part}] from PORTROM payload.bin"
 
-        payload-dumper-go -p ${part} -o build/portrom/images/ build/portrom/payload.bin >/dev/null 2>&1 ||error "提取移植包 [${part}] 分区时出错" "Extracting partition [${part}] error."
-      
-        extract_partition "${work_dir}/build/portrom/images/${part}.img" "${work_dir}/build/portrom/images/"
+            payload-dumper-go -p ${part} -o build/portrom/images/ build/portrom/payload.bin >/dev/null 2>&1 || error "提取移植包 [${part}] 分区时出错" "Extracting partition [${part}] error."
+        fi
+    extract_partition "${work_dir}/build/portrom/images/${part}.img" "${work_dir}/build/portrom/images/"
+    else
+        yellow "跳过从PORTORM提取分区[${part}]" "Skip extracting [${part}] from PORTROM"
     fi
 done
 rm -rf config
